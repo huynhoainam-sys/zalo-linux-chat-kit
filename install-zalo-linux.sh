@@ -19,6 +19,9 @@ else
   command -v python3 >/dev/null || need+=(python3)
   command -v xclip >/dev/null || need+=(xclip)
   command -v wl-paste >/dev/null || need+=(wl-clipboard)
+  command -v update-desktop-database >/dev/null || need+=(desktop-file-utils)
+  command -v notify-send >/dev/null || need+=(libnotify-bin)
+  command -v curl >/dev/null || need+=(ca-certificates)
   if ! ldconfig -p 2>/dev/null | grep -q 'libfuse.so.2'; then
     if apt-cache show libfuse2t64 >/dev/null 2>&1; then need+=(libfuse2t64); else need+=(libfuse2); fi
   fi

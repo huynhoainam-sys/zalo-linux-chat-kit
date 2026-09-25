@@ -4,6 +4,16 @@ Bộ cài dùng AppImage x86_64, cài theo user và không đụng database Wind
 
 ## Cài đặt
 
+Một dòng duy nhất:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/huynhoainam-sys/zalo-linux-chat-kit/main/install-zalo-linux.sh | bash
+```
+
+Script sẽ tự quét và cài dependency còn thiếu.
+
+Hoặc tải script về để kiểm tra trước:
+
 ```bash
 chmod +x install-zalo-linux.sh backup-zalo-linux.sh zalo-doctor.sh
 ./install-zalo-linux.sh
