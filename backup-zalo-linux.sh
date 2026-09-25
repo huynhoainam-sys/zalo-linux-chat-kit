@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+OUT="${1:-$HOME/zalo-linux-backups}"
+STAMP="$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$OUT"
+ARCHIVE="$OUT/zalo-data-$STAMP.tar.gz"
+paths=()
+for p in "$CONFIG_HOME/ZaloApp" "$CONFIG_HOME/Zalo" "$DATA_HOME/ZaloData" "$DATA_HOME/Zalo"; do
+  [[ -e "$p" ]] && paths+=("$p")
+done
+(( ${#paths[@]} )) || { echo "Không tìm thấy dữ liệu Zalo local; chưa cần backup."; exit 0; }
+tar -czf "$ARCHIVE" "${paths[@]}"
+sha256sum "$ARCHIVE" > "$ARCHIVE.sha256"
+echo "Đã backup: $ARCHIVE"
