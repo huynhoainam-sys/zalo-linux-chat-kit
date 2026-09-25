@@ -10,7 +10,7 @@ Một dòng duy nhất:
 curl -fsSL https://raw.githubusercontent.com/huynhoainam-sys/zalo-linux-chat-kit/main/install-zalo-linux.sh | bash
 ```
 
-Script sẽ tự quét và cài dependency còn thiếu.
+Mặc định script chọn bản `Full` x86_64 để có Wine bridge cho gọi thoại/video và trải nghiệm gần Windows hơn. Script tự quét và cài dependency còn thiếu, gồm thư viện đồ họa 32-bit cho Wine.
 
 Hoặc tải script về để kiểm tra trước:
 
@@ -52,4 +52,4 @@ Không copy thủ công thư mục Zalo từ Windows; dữ liệu E2EE/khóa thi
 
 Doctor phải báo đủ FUSE, curl, python3, xclip và wl-clipboard trước khi kiểm tra dán ảnh.
 
-Bản thường ưu tiên chat, ảnh, file và tìm kiếm. Bản `Full` chỉ nên dùng khi cần gọi thoại/video vì lớn hơn và có thêm Wine. Lịch sử nhiều năm chỉ khôi phục được nếu Zalo còn dữ liệu/backup cho phép đồng bộ.
+Bản `Full` phù hợp dùng hằng ngày như Windows. Nếu chỉ cần chat, có thể dùng `ZALO_VARIANT=chat` để tải bản nhẹ hơn. Lịch sử nhiều năm chỉ khôi phục được nếu Zalo còn dữ liệu/backup cho phép đồng bộ.

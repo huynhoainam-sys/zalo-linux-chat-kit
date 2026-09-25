@@ -2,6 +2,7 @@
 set -Eeuo pipefail
 
 REPO="${ZALO_REPO:-VN-Linux-Family/zalo-for-linux}"
+VARIANT="${ZALO_VARIANT:-full}"
 APP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/zalo-linux"
 BIN_DIR="${XDG_BIN_HOME:-$HOME/.local/bin}"
 DESKTOP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
@@ -10,12 +11,17 @@ API="https://api.github.com/repos/$REPO/releases/latest"
 die(){ echo "[ZALO-ERROR] $*" >&2; exit 1; }
 info(){ echo "[ZALO] $*"; }
 [[ "$(uname -m)" == "x86_64" ]] || die "Bản này dành cho Intel/AMD x86_64"
+[[ "$VARIANT" == "full" || "$VARIANT" == "chat" ]] || die "ZALO_VARIANT chỉ nhận full hoặc chat"
 if ! command -v apt-get >/dev/null || ! command -v sudo >/dev/null; then
   command -v curl >/dev/null || die "Thiếu curl; cài curl thủ công"
   command -v python3 >/dev/null || die "Thiếu python3; cài python3 thủ công"
 else
   need=()
   command -v curl >/dev/null || need+=(curl)
+  if [[ "$VARIANT" == "full" && -f /usr/bin/dpkg ]]; then
+    sudo dpkg --add-architecture i386 >/dev/null 2>&1 || true
+    need+=(libgl1 libgl1:i386 libegl1 libegl1:i386 libvulkan1 libvulkan1:i386 mesa-vulkan-drivers mesa-vulkan-drivers:i386)
+  fi
   command -v python3 >/dev/null || need+=(python3)
   command -v xclip >/dev/null || need+=(xclip)
   command -v wl-paste >/dev/null || need+=(wl-clipboard)
@@ -34,10 +40,10 @@ fi
 mkdir -p "$APP_DIR" "$BIN_DIR" "$DESKTOP_DIR"
 tmp="$(mktemp)"; trap 'rm -f "$tmp"' EXIT
 curl --fail --location --silent --show-error "$API" -o "$tmp"
-readarray -t META < <(python3 - "$tmp" <<'PY'
+readarray -t META < <(python3 - "$tmp" "$VARIANT" <<'PY'
 import json,sys
 d=json.load(open(sys.argv[1],encoding='utf-8'))
-a=[x for x in d.get('assets',[]) if x['name'].endswith('x86_64.AppImage') and 'Full' not in x['name']]
+a=[x for x in d.get('assets',[]) if x['name'].endswith('x86_64.AppImage') and (('Full' in x['name']) if sys.argv[2]=='full' else ('Full' not in x['name']))]
 if not a: raise SystemExit('Không tìm thấy AppImage x86_64 thường')
 x=a[0]; print(d.get('tag_name','unknown')); print(x['name']); print(x['browser_download_url']); print(x.get('digest',''))
 PY
