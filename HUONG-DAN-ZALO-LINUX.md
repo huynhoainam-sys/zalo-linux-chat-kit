@@ -7,7 +7,7 @@ Bộ cài dùng AppImage x86_64, cài theo user và không đụng database Wind
 Một dòng duy nhất:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/huynhoainam-sys/zalo-linux-chat-kit/main/install-zalo-linux.sh | bash
+(command -v curl >/dev/null && curl -fsSL https://raw.githubusercontent.com/huynhoainam-sys/zalo-linux-chat-kit/main/install-zalo-linux.sh || wget -qO- https://raw.githubusercontent.com/huynhoainam-sys/zalo-linux-chat-kit/main/install-zalo-linux.sh) | bash
 ```
 
 Mặc định script chọn bản `chat` x86_64, không cài Wine/call/video. Script tự quét và cài dependency còn thiếu cho tin nhắn, lịch sử và hình ảnh.
@@ -53,3 +53,11 @@ Không copy thủ công thư mục Zalo từ Windows; dữ liệu E2EE/khóa thi
 Doctor phải báo đủ FUSE, curl, python3, xclip và wl-clipboard trước khi kiểm tra dán ảnh.
 
 Bản `chat` là lựa chọn nên dùng cho nhu cầu này. Lịch sử nhiều năm chỉ khôi phục được nếu Zalo còn dữ liệu/backup cho phép đồng bộ.
+
+## Gỡ cài đặt an toàn
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/huynhoainam-sys/zalo-linux-chat-kit/main/zalo-uninstall.sh | bash
+```
+
+Lệnh không xóa dữ liệu chat. Ubuntu/Mint x86_64 là mục tiêu chính; ARM64 không được cam kết.
