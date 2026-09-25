@@ -8,9 +8,9 @@ Cài nhanh Zalo trên Ubuntu/Linux Mint, ưu tiên nhắn tin, lịch sử chat,
 curl -fsSL https://raw.githubusercontent.com/huynhoainam-sys/zalo-linux-chat-kit/main/install-zalo-linux.sh | bash
 ```
 
-Mặc định cài bản `Full` x86_64 để có trải nghiệm gần Windows nhất, gồm Wine bridge cho gọi thoại/video. Script tự quét và cài dependency còn thiếu: FUSE, đồ họa 32-bit, curl, Python 3, clipboard X11/Wayland, desktop integration và notification. Cần tài khoản có quyền `sudo` trên Ubuntu/Linux Mint.
+Mặc định cài bản `chat` x86_64, không cài Wine/call/video: nhẹ hơn và tập trung vào tin nhắn, lịch sử và hình ảnh. Script tự quét và cài dependency còn thiếu: FUSE, curl, Python 3, clipboard X11/Wayland, desktop integration và notification. Cần tài khoản có quyền `sudo` trên Ubuntu/Linux Mint.
 
-Chỉ muốn bản chat nhẹ hơn:
+Nếu sau này cần bản Full:
 
 ```bash
 ZALO_VARIANT=chat bash -c "$(curl -fsSL https://raw.githubusercontent.com/huynhoainam-sys/zalo-linux-chat-kit/main/install-zalo-linux.sh)"

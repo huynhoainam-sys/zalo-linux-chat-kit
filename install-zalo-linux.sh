@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 REPO="${ZALO_REPO:-VN-Linux-Family/zalo-for-linux}"
-VARIANT="${ZALO_VARIANT:-full}"
+VARIANT="${ZALO_VARIANT:-chat}"
 APP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/zalo-linux"
 BIN_DIR="${XDG_BIN_HOME:-$HOME/.local/bin}"
 DESKTOP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/applications"

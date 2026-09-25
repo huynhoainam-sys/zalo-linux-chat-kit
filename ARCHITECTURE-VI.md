@@ -11,7 +11,7 @@ AppImage
       │   └─ giải mã/khôi phục backup và đồng bộ E2EE
       ├─ zimage/zjxl/mp4thumb
       │   └─ xử lý ảnh, thumbnail và định dạng media
-      └─ zcall-bridge + Wine (chỉ bản Full x86_64)
+      └─ zcall-bridge + Wine (tùy chọn, không cài mặc định)
           └─ gọi thoại/video qua binary Windows của Zalo
 ```
 
@@ -24,7 +24,7 @@ Zalo PC là Electron nhưng có nhiều native module phụ thuộc Windows/macO
 - Tin nhắn E2EE cần `db-cross-v4` Linux native.
 - Database local dùng SQLite và các worker riêng của Zalo.
 - Ảnh clipboard cần `xclip` trên X11 hoặc `wl-clipboard` trên Wayland.
-- Bản Full thêm Wine và thư viện đồ họa i386 để hỗ trợ cuộc gọi.
+- Bản Full có thể thêm Wine và thư viện đồ họa i386 để hỗ trợ cuộc gọi; bộ cài mặc định không cài phần này.
 
 ## Giới hạn không thể hứa như Windows
 
