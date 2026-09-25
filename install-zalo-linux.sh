@@ -51,13 +51,15 @@ PY
 TAG="${META[0]}"; NAME="${META[1]}"; URL="${META[2]}"; DIGEST="${META[3]}"
 info "Release $TAG — $NAME"
 curl --fail --location --progress-bar "$URL" -o "$APPIMAGE.part"
-mv "$APPIMAGE.part" "$APPIMAGE"; chmod 0755 "$APPIMAGE"
 if [[ "$DIGEST" == sha256:* ]]; then
-  [[ "${DIGEST#sha256:}" == "$(sha256sum "$APPIMAGE" | awk '{print $1}')" ]] || die "Checksum không khớp"
+  [[ "${DIGEST#sha256:}" == "$(sha256sum "$APPIMAGE.part" | awk '{print $1}')" ]] || { rm -f "$APPIMAGE.part"; die "Checksum không khớp; giữ nguyên bản đang cài"; }
   info "Checksum SHA-256: OK"
 else info "Release không cung cấp digest API; bỏ qua checksum"; fi
+if [[ -f "$APPIMAGE" ]]; then mv -f "$APPIMAGE" "$APPIMAGE.previous"; fi
+mv "$APPIMAGE.part" "$APPIMAGE"; chmod 0755 "$APPIMAGE"
 cat > "$BIN_DIR/zalo-linux" <<EOF
 #!/usr/bin/env bash
+if ! ldconfig -p 2>/dev/null | grep -q 'libfuse.so.2'; then export APPIMAGE_EXTRACT_AND_RUN=1; fi
 exec "$APPIMAGE" "\$@"
 EOF
 chmod 0755 "$BIN_DIR/zalo-linux"

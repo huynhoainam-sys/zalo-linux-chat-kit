@@ -17,3 +17,5 @@ ZALO_VARIANT=chat bash -c "$(curl -fsSL https://raw.githubusercontent.com/huynho
 ```
 
 Xem [HUONG-DAN-ZALO-LINUX.md](HUONG-DAN-ZALO-LINUX.md) để đồng bộ lịch sử và ảnh.
+
+Nếu lỗi runtime, chạy [zalo-repair.sh](zalo-repair.sh). Xem [TROUBLESHOOTING.md](TROUBLESHOOTING.md) để rollback mà không xóa dữ liệu chat.
