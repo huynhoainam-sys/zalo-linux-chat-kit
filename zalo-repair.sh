@@ -30,5 +30,6 @@ if ! ldconfig -p 2>/dev/null | grep -q 'libfuse.so.2'; then export APPIMAGE_EXTR
 exec "$APPIMAGE" "\$@"
 EOF
 chmod 0755 "$BIN_DIR/zalo-linux"
+if ! ldconfig -p 2>/dev/null | grep -q 'libfuse.so.2'; then export APPIMAGE_EXTRACT_AND_RUN=1; fi
 "$APPIMAGE" --appimage-version >/dev/null 2>&1 || echo "[WARN] AppImage không trả version; thử rollback nếu app không mở."
 echo "Đã sửa launcher/runtime. Dữ liệu chat không bị xóa."
