@@ -10,7 +10,7 @@ Một dòng duy nhất:
 (command -v curl >/dev/null && curl -fsSL https://raw.githubusercontent.com/huynhoainam-sys/zalo-linux-chat-kit/main/install-zalo-linux.sh || wget -qO- https://raw.githubusercontent.com/huynhoainam-sys/zalo-linux-chat-kit/main/install-zalo-linux.sh) | bash
 ```
 
-Mặc định script chọn bản `chat` x86_64, không cài Wine/call/video. Script tự quét và cài dependency còn thiếu cho tin nhắn, lịch sử và hình ảnh.
+Mặc định script chọn bản `chat` x86_64, không cài Wine/call/video. Script tự quét và cài dependency runtime/clipboard còn thiếu; việc tải ảnh cũ phụ thuộc dữ liệu Zalo còn lưu.
 
 Hoặc tải script về để kiểm tra trước:
 
@@ -29,7 +29,7 @@ sudo apt install -y curl python3 xclip wl-clipboard libfuse2
 
 Ubuntu 24.04 có thể dùng `libfuse2t64` thay cho `libfuse2`.
 
-## Đồng bộ tin nhắn cũ và ảnh
+## Đồng bộ tin nhắn cũ và kiểm tra ảnh
 
 1. Đăng nhập bằng QR.
 2. Trên điện thoại mở Cài đặt Zalo, tìm `Đồng bộ tin nhắn` hoặc `Đồng bộ tin nhắn với máy tính`.
@@ -52,7 +52,7 @@ Không copy thủ công thư mục Zalo từ Windows; dữ liệu E2EE/khóa thi
 
 Doctor phải báo đủ FUSE, curl, python3, xclip và wl-clipboard trước khi kiểm tra dán ảnh.
 
-Bản `chat` là lựa chọn nên dùng cho nhu cầu này. Lịch sử nhiều năm chỉ khôi phục được nếu Zalo còn dữ liệu/backup cho phép đồng bộ.
+Bản `chat` và `full` dùng cùng cơ chế tin nhắn/ảnh của AppImage upstream; chuyển sang `full` không tự khôi phục ảnh cũ. Nếu tin nhắn đã về nhưng ảnh cũ thiếu, xem [hướng dẫn kiểm tra ảnh cũ](TROUBLESHOOTING.md#ảnh-cũ-trong-tin-nhắn-không-về-linux). Chỉ có thể lấy lại ảnh từ nguồn còn giữ dữ liệu, chẳng hạn ảnh đang mở được trên điện thoại hoặc bản sao lưu phù hợp.
 
 ## Gỡ cài đặt an toàn
 
