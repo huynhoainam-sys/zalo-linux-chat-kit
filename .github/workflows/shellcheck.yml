@@ -15,3 +15,5 @@ jobs:
         run: for f in *.sh; do bash -n "$f"; done
       - name: Shellcheck
         run: shellcheck --severity=warning *.sh
+      - name: Logic regression tests
+        run: python3 -m unittest discover -s tests -v
