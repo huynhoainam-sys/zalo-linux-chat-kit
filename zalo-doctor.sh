@@ -19,5 +19,7 @@ done
 FREE="$(df -Pk "$HOME" | awk 'NR==2 {print $4}')"
 (( FREE > 1048576 )) && pass "Trống > 1 GiB" || fail "Nên có ít nhất 1 GiB trống"
 pgrep -af 'Zalo|zalo' >/dev/null 2>&1 && pass "Zalo đang chạy" || echo '[NOTE] Zalo chưa chạy'
+echo "[NOTE] Doctor chỉ kiểm tra runtime/clipboard; không xác nhận ảnh cũ đã đồng bộ."
 (( warn )) && { echo "Có $warn cảnh báo."; exit 1; }
-echo "Môi trường phù hợp cho chat và đồng bộ ảnh/tin nhắn."
+echo "[NOTE] Ảnh mới hiện nhưng ảnh cũ thiếu: xem TROUBLESHOOTING.md."
+echo "Kiểm tra runtime hoàn tất."
