@@ -43,6 +43,7 @@ else
   echo "[ZALO] Không trích xuất được icon; dùng icon hệ thống." >&2
 fi
 rm -r -- "$icon_tmp"
+if [[ -s "$ICON_PATH" ]]; then DESKTOP_ICON="$ICON_PATH"; else DESKTOP_ICON=applications-internet; fi
 mkdir -p "$DESKTOP_DIR"
 cat > "$DESKTOP_DIR/zalo-linux.desktop" <<EOF
 [Desktop Entry]
