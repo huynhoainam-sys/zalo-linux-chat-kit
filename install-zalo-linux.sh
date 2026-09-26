@@ -40,14 +40,19 @@ fi
 mkdir -p "$APP_DIR" "$BIN_DIR" "$DESKTOP_DIR"
 tmp="$(mktemp)"; trap 'rm -f "$tmp"' EXIT
 curl --fail --location --silent --show-error "$API" -o "$tmp"
-readarray -t META < <(python3 - "$tmp" "$VARIANT" <<'PY'
+metadata="$(python3 - "$tmp" "$VARIANT" <<'PY'
 import json,sys
 d=json.load(open(sys.argv[1],encoding='utf-8'))
-a=[x for x in d.get('assets',[]) if x['name'].endswith('x86_64.AppImage') and (('Full' in x['name']) if sys.argv[2]=='full' else ('Full' not in x['name']))]
-if not a: raise SystemExit('Không tìm thấy AppImage x86_64 thường')
-x=a[0]; print(d.get('tag_name','unknown')); print(x['name']); print(x['browser_download_url']); print(x.get('digest',''))
+suffix='-Full-x86_64.AppImage' if sys.argv[2]=='full' else '-x86_64.AppImage'
+a=[x for x in d.get('assets',[]) if x.get('name','').endswith(suffix) and '+ZaDark-' in x['name'] and (sys.argv[2]=='full' or '-Full-' not in x['name'])]
+if not a: raise SystemExit('Không tìm thấy AppImage ZaDark x86_64 đúng biến thể')
+if len(a) != 1: raise SystemExit('Có nhiều AppImage ZaDark cùng biến thể; cần chọn thủ công')
+x=a[0]
+print(d.get('tag_name','unknown')); print(x['name']); print(x['browser_download_url']); print(x.get('digest') or '-')
 PY
-)
+)" || die "Không đọc được metadata release; giữ nguyên bản đang cài"
+readarray -t META <<< "$metadata"
+(( ${#META[@]} == 4 )) || die "Metadata release thiếu trường; giữ nguyên bản đang cài"
 TAG="${META[0]}"; NAME="${META[1]}"; URL="${META[2]}"; DIGEST="${META[3]}"
 info "Release $TAG — $NAME"
 curl --fail --location --progress-bar "$URL" -o "$APPIMAGE.part"
@@ -55,8 +60,12 @@ if [[ "$DIGEST" == sha256:* ]]; then
   [[ "${DIGEST#sha256:}" == "$(sha256sum "$APPIMAGE.part" | awk '{print $1}')" ]] || { rm -f "$APPIMAGE.part"; die "Checksum không khớp; giữ nguyên bản đang cài"; }
   info "Checksum SHA-256: OK"
 else info "Release không cung cấp digest API; bỏ qua checksum"; fi
-if [[ -f "$APPIMAGE" ]]; then mv -f "$APPIMAGE" "$APPIMAGE.previous"; fi
-mv "$APPIMAGE.part" "$APPIMAGE"; chmod 0755 "$APPIMAGE"
+chmod 0755 "$APPIMAGE.part"
+if [[ -f "$APPIMAGE" ]]; then
+  ln -f -- "$APPIMAGE" "$APPIMAGE.previous.tmp"
+  mv -f -- "$APPIMAGE.previous.tmp" "$APPIMAGE.previous"
+fi
+mv -f -- "$APPIMAGE.part" "$APPIMAGE"
 cat > "$BIN_DIR/zalo-linux" <<'EOF'
 #!/usr/bin/env bash
 APPIMAGE="${XDG_DATA_HOME:-$HOME/.local/share}/zalo-linux/Zalo-x86_64.AppImage"

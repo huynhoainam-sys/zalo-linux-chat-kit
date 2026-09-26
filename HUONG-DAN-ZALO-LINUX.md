@@ -50,9 +50,9 @@ Không copy thủ công thư mục Zalo từ Windows; dữ liệu E2EE/khóa thi
 ./zalo-doctor.sh
 ```
 
-Doctor phải báo đủ FUSE, curl, python3, xclip và wl-clipboard trước khi kiểm tra dán ảnh.
+Doctor kiểm tra FUSE, curl, python3 và clipboard của phiên đồ họa đang dùng. Khi thiếu FUSE 2, launcher dùng chế độ giải nén AppImage và doctor chỉ ghi chú. Doctor không thể xác nhận ảnh cũ đã tải được.
 
-Bản `chat` và `full` dùng cùng cơ chế tin nhắn/ảnh của AppImage upstream; chuyển sang `full` không tự khôi phục ảnh cũ. Nếu tin nhắn đã về nhưng ảnh cũ thiếu, xem [hướng dẫn kiểm tra ảnh cũ](TROUBLESHOOTING.md#ảnh-cũ-trong-tin-nhắn-không-về-linux). Chỉ có thể lấy lại ảnh từ nguồn còn giữ dữ liệu, chẳng hạn ảnh đang mở được trên điện thoại hoặc bản sao lưu phù hợp.
+Bản `chat` và `full` dùng cùng cơ chế tin nhắn/ảnh của AppImage upstream; chuyển sang `full` không tự khôi phục ảnh cũ. Nếu tin nhắn đã về nhưng ảnh cũ thiếu, xem [hướng dẫn kiểm tra ảnh cũ](TROUBLESHOOTING.md#ảnh-cũ-trong-tin-nhắn-không-về-linux). So sánh với **Zalo PC mới đăng nhập**, không dùng Zalo Web làm mốc. Ảnh chỉ còn trên điện thoại cũ cần được lưu lại từ điện thoại.
 
 ## Gỡ cài đặt an toàn
 
