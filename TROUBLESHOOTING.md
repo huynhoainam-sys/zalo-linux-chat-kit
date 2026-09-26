@@ -16,6 +16,18 @@ Chạy `~/.local/bin/zalo-linux` trong Terminal. Nếu thấy `The SUID sandbox 
 
 Chạy repair để cài `xclip` và `wl-clipboard`, sau đó đăng xuất/đăng nhập lại desktop nếu clipboard portal chưa hoạt động.
 
+## Ảnh cũ trong tin nhắn không về Linux
+
+Nếu ảnh mới vẫn hiển thị nhưng ảnh cũ chỉ xem được trên điện thoại, đừng xóa cache/database Zalo hoặc cài lại trước khi sao lưu. Chạy `curl -fsSL https://raw.githubusercontent.com/huynhoainam-sys/zalo-linux-chat-kit/main/backup-zalo-linux.sh | bash` để giữ dữ liệu Linux hiện tại. Đồng bộ tin nhắn không bảo đảm khôi phục mọi tệp ảnh cũ.
+
+1. Chọn một ảnh cũ cụ thể, mở lại cùng cuộc trò chuyện trên điện thoại và trên Zalo Web hoặc Zalo PC được hỗ trợ. Nếu thiết bị khác cũng thiếu ảnh, installer/repair Linux không thể tạo lại tệp đó. Hãy lưu ảnh từ điện thoại về máy hoặc lưu vào My Documents rồi chuyển sang máy tính.
+2. Nếu Zalo Web/PC xem được ảnh đó nhưng bản Linux không xem được, ghi lại thời điểm tin nhắn, bản AppImage và lỗi khi chạy `~/.local/bin/zalo-linux` từ Terminal (ẩn nội dung riêng tư). Đây là lỗi cần khoanh vùng trong AppImage upstream; đổi sang bản Full hay cài `xclip` không tự sửa phần tải ảnh cũ.
+3. Trên điện thoại, kiểm tra **Cá nhân → Cài đặt → Sao lưu và khôi phục** và tài khoản Google Drive liên kết. Theo [Zalo Help](https://help.zalo.me/huong-dan/chuyen-muc/quan-ly-tai-khoan-zalo/sao-luu-va-khoi-phuc/chi-tiet-ve-cac-du-lieu-duoc-zalo-sao-luu/), sao lưu ảnh chỉ kiểm tra ảnh gửi trong 120 ngày gần nhất tại thời điểm sao lưu; ảnh trong cộng đồng hoặc nhóm hơn 100 người không được sao lưu theo cách này. Ảnh đã lưu trước đó vẫn phụ thuộc bản sao lưu thực tế.
+
+Ảnh quan trọng còn mở được trên điện thoại: lưu về máy hoặc My Documents ngay. Không gửi database, QR đăng nhập, token hay URL ảnh riêng tư lên issue công khai.
+
+
+
 ## Bản cập nhật không chạy
 
 Installer giữ bản trước tại:
