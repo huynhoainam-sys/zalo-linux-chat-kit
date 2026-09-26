@@ -16,6 +16,18 @@ Chạy `~/.local/bin/zalo-linux` trong Terminal. Nếu thấy `The SUID sandbox 
 
 Chạy repair để cài `xclip` và `wl-clipboard`, sau đó đăng xuất/đăng nhập lại desktop nếu clipboard portal chưa hoạt động.
 
+## ZaDark báo `Unexpected token '<'` khi dịch tin nhắn
+
+Nút dịch thuộc **ZaDark** được đóng gói trong AppImage upstream. Thông báo này cho biết mã dịch đang đọc một phản hồi HTML như JSON. Ảnh lỗi chưa cho biết máy chủ đã trả mã HTTP nào, nên không thể kết luận chỉ từ ảnh rằng lỗi do mạng, giới hạn dịch hay máy chủ ZaDark.
+
+1. Đóng Zalo rồi chạy lại script cài đặt để lấy bản AppImage mới nhất; installer giữ bản trước ở `Zalo-x86_64.AppImage.previous`. Chọn ngôn ngữ đích trong ZaDark Settings và thử lại với một câu ngắn, không chứa thông tin riêng tư.
+2. Nếu vẫn lỗi, mở `Ctrl+Shift+I` → **Network**, bấm dịch một câu thử, lọc `Fetch/XHR`. Kiểm tra **Status** và **Response Headers → Content-Type** của yêu cầu dịch. Nếu phản hồi là `text/html`, ghi lại **tên miền**, mã HTTP và phiên bản ZaDark; không chia sẻ URL đầy đủ, nội dung tin nhắn, cookie, token hoặc response body.
+3. Nếu cùng lỗi trên ZaDark bản mới nhất, xem đây là lỗi ở tính năng/API dịch của ZaDark; repair FUSE, clipboard, đổi `--no-sandbox` hoặc xóa dữ liệu Zalo không xử lý được phản hồi dịch sai định dạng. Trong lúc chờ upstream sửa, sao chép đoạn cần dịch sang công cụ dịch tin cậy. Đừng xóa cache/database Zalo để thử sửa lỗi này.
+
+Bộ cài này không sửa mã ZaDark bên trong AppImage và không bảo đảm API dịch của ZaDark luôn hoạt động.
+
+
+
 ## Ảnh cũ trong tin nhắn không về Linux
 
 Nếu ảnh mới vẫn hiển thị nhưng ảnh cũ chỉ xem được trên điện thoại, đừng xóa cache/database Zalo hoặc cài lại trước khi sao lưu. Chạy `curl -fsSL https://raw.githubusercontent.com/huynhoainam-sys/zalo-linux-chat-kit/main/backup-zalo-linux.sh | bash` để giữ dữ liệu Linux hiện tại. Đồng bộ tin nhắn không bảo đảm khôi phục mọi tệp ảnh cũ.
