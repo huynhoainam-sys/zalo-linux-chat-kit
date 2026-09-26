@@ -57,18 +57,31 @@ if [[ "$DIGEST" == sha256:* ]]; then
 else info "Release không cung cấp digest API; bỏ qua checksum"; fi
 if [[ -f "$APPIMAGE" ]]; then mv -f "$APPIMAGE" "$APPIMAGE.previous"; fi
 mv "$APPIMAGE.part" "$APPIMAGE"; chmod 0755 "$APPIMAGE"
-cat > "$BIN_DIR/zalo-linux" <<EOF
+cat > "$BIN_DIR/zalo-linux" <<'EOF'
 #!/usr/bin/env bash
+APPIMAGE="${XDG_DATA_HOME:-$HOME/.local/share}/zalo-linux/Zalo-x86_64.AppImage"
 if ! ldconfig -p 2>/dev/null | grep -q 'libfuse.so.2'; then export APPIMAGE_EXTRACT_AND_RUN=1; fi
-exec "$APPIMAGE" "\$@"
+# AppImage mount is user-owned, so Electron's setuid helper cannot start on affected Ubuntu systems.
+# ZALO_SANDBOX=1 restores the upstream launch mode when the host supports it.
+if [[ "${ZALO_SANDBOX:-0}" == 1 ]]; then exec "$APPIMAGE" "$@"; fi
+exec "$APPIMAGE" --no-sandbox "$@"
 EOF
 chmod 0755 "$BIN_DIR/zalo-linux"
+ICON_PATH="$APP_DIR/zalo.png"
+icon_tmp="$(mktemp -d)"
+if (cd "$icon_tmp" && "$APPIMAGE" --appimage-extract 'app/pc-dist/favicon-512x512.png' >/dev/null 2>&1) && [[ -s "$icon_tmp/squashfs-root/app/pc-dist/favicon-512x512.png" ]]; then
+  cp "$icon_tmp/squashfs-root/app/pc-dist/favicon-512x512.png" "$ICON_PATH"
+else
+  echo "[ZALO] Không trích xuất được icon; dùng icon hệ thống." >&2
+fi
+rm -r -- "$icon_tmp"
+if [[ -s "$ICON_PATH" ]]; then DESKTOP_ICON="$ICON_PATH"; else DESKTOP_ICON=applications-internet; fi
 cat > "$DESKTOP_DIR/zalo-linux.desktop" <<EOF
 [Desktop Entry]
 Name=Zalo Linux
 Comment=Zalo messaging client for Linux
 Exec=$BIN_DIR/zalo-linux %U
-Icon=applications-internet
+Icon=$DESKTOP_ICON
 Terminal=false
 Type=Application
 Categories=Network;InstantMessaging;
