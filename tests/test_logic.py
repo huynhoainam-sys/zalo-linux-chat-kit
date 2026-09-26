@@ -18,7 +18,8 @@ class BackupTests(unittest.TestCase):
             media = Path(home, '.config', 'ZaloData', 'cal', 'main.meta')
             media.parent.mkdir(parents=True)
             media.write_text('sample')
-            env = dict(os.environ, HOME=home)
+            env = dict(os.environ, HOME=home, XDG_CONFIG_HOME=str(Path(home, '.config')),
+                       XDG_DATA_HOME=str(Path(home, '.local', 'share')))
             for _ in range(2):
                 subprocess.run(['bash', str(ROOT / 'backup-zalo-linux.sh')], env=env, check=True, capture_output=True)
             backups = sorted(Path(home, 'zalo-linux-backups').glob('*.tar.gz'))
