@@ -27,6 +27,8 @@ bash -n "$HOME/zalo-linux-chat-kit/install-zalo-linux.sh" && bash "$HOME/zalo-li
 "$HOME/.local/bin/zalo-linux"
 ```
 
+Nếu `curl: (22) ... 403` xuất hiện **sau khi clone thành công**, cập nhật bộ cài bằng `git pull` theo lệnh ở trên: installer sẽ thử bản upstream cố định `26.10.11` với kiểm tra SHA-256 khi GitHub API không phản hồi. Nếu GitHub Releases cũng bị chặn, cần đổi mạng hoặc liên hệ quản trị mạng; không xóa dữ liệu Zalo.
+
 Mặc định script chọn bản `chat` x86_64 (không kèm Wine/call/video), tự kiểm tra và cài các dependency còn thiếu khi có quyền `sudo`. Nếu muốn bản Full, sau khi đã tải/cập nhật repo, chạy:
 
 ```bash
