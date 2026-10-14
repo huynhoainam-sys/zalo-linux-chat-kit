@@ -27,6 +27,8 @@ bash -n "$HOME/zalo-linux-chat-kit/install-zalo-linux.sh" && bash "$HOME/zalo-li
 "$HOME/.local/bin/zalo-linux"
 ```
 
+**Khi GitHub API báo 403:** installer tự thử bản upstream cố định đã xác minh (`26.10.11`, SHA-256 cho Chat/Full). Đây là fallback, không bảo đảm mới nhất. Nếu GitHub Releases cũng bị chặn, cần kiểm tra proxy/tường lửa hoặc đổi mạng. Script sẽ không thay AppImage đang chạy nếu tải lỗi hoặc checksum sai.
+
 Mặc định script chọn bản `chat` x86_64 (không kèm Wine/call/video), tự kiểm tra và cài các dependency còn thiếu khi có quyền `sudo`. Nếu muốn bản Full, sau khi đã tải/cập nhật repo, chạy:
 
 ```bash
