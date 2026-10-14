@@ -2,32 +2,40 @@
 
 Bộ cài dùng AppImage x86_64, cài theo user và không đụng database Windows.
 
-## Cài đặt
+## Cài đặt trên Ubuntu/Linux Mint (khuyến nghị)
 
-Một dòng duy nhất:
+Cách này tải script bằng `git clone`, không phụ thuộc `raw.githubusercontent.com` — địa chỉ đang trả lỗi HTTP 403 trên một số mạng. Cần Ubuntu/Linux Mint **x86_64**, tài khoản có quyền `sudo` và kết nối tới GitHub để tải bản phát hành.
 
-```bash
-(command -v curl >/dev/null && curl -fsSL https://raw.githubusercontent.com/huynhoainam-sys/zalo-linux-chat-kit/main/install-zalo-linux.sh || wget -qO- https://raw.githubusercontent.com/huynhoainam-sys/zalo-linux-chat-kit/main/install-zalo-linux.sh) | bash
-```
-
-Mặc định script chọn bản `chat` x86_64, không cài Wine/call/video. Script tự quét và cài dependency runtime/clipboard còn thiếu; việc tải ảnh cũ phụ thuộc dữ liệu Zalo còn lưu.
-
-Hoặc tải script về để kiểm tra trước:
+**Cài lần đầu:** sao chép toàn bộ khối lệnh vào Terminal.
 
 ```bash
-chmod +x install-zalo-linux.sh backup-zalo-linux.sh zalo-doctor.sh
-./install-zalo-linux.sh
-~/.local/bin/zalo-linux
+sudo apt-get update && sudo apt-get install -y git
+git clone --depth 1 https://github.com/huynhoainam-sys/zalo-linux-chat-kit.git "$HOME/zalo-linux-chat-kit"
+bash -n "$HOME/zalo-linux-chat-kit/install-zalo-linux.sh" && bash "$HOME/zalo-linux-chat-kit/install-zalo-linux.sh"
 ```
 
- Script sẽ tự cài `curl`, `python3`, `xclip`, `wl-clipboard` và FUSE nếu máy có `sudo`. Nếu cần cài thủ công:
+**Nếu đã tải repository trước đây:** không chạy lại `git clone` vào thư mục cũ; cập nhật và cài lại:
 
 ```bash
-sudo apt update
-sudo apt install -y curl python3 xclip wl-clipboard libfuse2
+git -C "$HOME/zalo-linux-chat-kit" pull --ff-only
+bash -n "$HOME/zalo-linux-chat-kit/install-zalo-linux.sh" && bash "$HOME/zalo-linux-chat-kit/install-zalo-linux.sh"
 ```
 
-Ubuntu 24.04 có thể dùng `libfuse2t64` thay cho `libfuse2`.
+**Mở Zalo:**
+
+```bash
+"$HOME/.local/bin/zalo-linux"
+```
+
+Mặc định script chọn bản `chat` x86_64 (không kèm Wine/call/video), tự kiểm tra và cài các dependency còn thiếu khi có quyền `sudo`. Nếu muốn bản Full, sau khi đã tải/cập nhật repo, chạy:
+
+```bash
+ZALO_VARIANT=full bash "$HOME/zalo-linux-chat-kit/install-zalo-linux.sh"
+```
+
+> Không sử dụng lệnh `curl ... | bash` trong trường hợp URL chưa tải thành công. Nếu `git clone` cũng lỗi, kiểm tra mạng/proxy hoặc thử mạng khác trước; installer vẫn cần truy cập `api.github.com` và GitHub Releases để tải AppImage. Không xóa dữ liệu chat khi xử lý lỗi cài.
+
+Khi cần tự cài dependency, Ubuntu 24.04 thường sử dụng `libfuse2t64`; bộ cài sẽ tự chọn gói FUSE tương ứng nếu kho apt có.
 
 ## Đồng bộ tin nhắn cũ và kiểm tra ảnh
 
@@ -41,13 +49,13 @@ Không copy thủ công thư mục Zalo từ Windows; dữ liệu E2EE/khóa thi
 ## Backup trước khi update
 
 ```bash
-./backup-zalo-linux.sh
+bash "$HOME/zalo-linux-chat-kit/backup-zalo-linux.sh"
 ```
 
 ## Kiểm tra lỗi
 
 ```bash
-./zalo-doctor.sh
+bash "$HOME/zalo-linux-chat-kit/zalo-doctor.sh"
 ```
 
 Doctor kiểm tra FUSE, curl, python3 và clipboard của phiên đồ họa đang dùng. Khi thiếu FUSE 2, launcher dùng chế độ giải nén AppImage và doctor chỉ ghi chú. Doctor không thể xác nhận ảnh cũ đã tải được.
@@ -57,7 +65,7 @@ Bản `chat` và `full` dùng cùng cơ chế tin nhắn/ảnh của AppImage up
 ## Gỡ cài đặt an toàn
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/huynhoainam-sys/zalo-linux-chat-kit/main/zalo-uninstall.sh | bash
+bash "$HOME/zalo-linux-chat-kit/zalo-uninstall.sh"
 ```
 
 Lệnh không xóa dữ liệu chat. Ubuntu/Mint x86_64 là mục tiêu chính; ARM64 không được cam kết.
