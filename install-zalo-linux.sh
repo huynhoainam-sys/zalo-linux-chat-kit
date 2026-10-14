@@ -39,23 +39,47 @@ else
 fi
 mkdir -p "$APP_DIR" "$BIN_DIR" "$DESKTOP_DIR"
 tmp="$(mktemp)"; trap 'rm -f "$tmp"' EXIT
-curl --fail --location --silent --show-error "$API" -o "$tmp"
-metadata="$(python3 - "$tmp" "$VARIANT" <<'PY'
-import json,sys
-d=json.load(open(sys.argv[1],encoding='utf-8'))
-suffix='-Full-x86_64.AppImage' if sys.argv[2]=='full' else '-x86_64.AppImage'
-a=[x for x in d.get('assets',[]) if x.get('name','').endswith(suffix) and '+ZaDark-' in x['name'] and (sys.argv[2]=='full' or '-Full-' not in x['name'])]
-if not a: raise SystemExit('Không tìm thấy AppImage ZaDark x86_64 đúng biến thể')
-if len(a) != 1: raise SystemExit('Có nhiều AppImage ZaDark cùng biến thể; cần chọn thủ công')
-x=a[0]
-print(d.get('tag_name','unknown')); print(x['name']); print(x['browser_download_url']); print(x.get('digest') or '-')
-PY
-)" || die "Không đọc được metadata release; giữ nguyên bản đang cài"
-readarray -t META <<< "$metadata"
-(( ${#META[@]} == 4 )) || die "Metadata release thiếu trường; giữ nguyên bản đang cài"
-TAG="${META[0]}"; NAME="${META[1]}"; URL="${META[2]}"; DIGEST="${META[3]}"
+# Thu thập metadata tự động. Nếu API bị HTTP 403 hoặc JSON lỗi, fallback sang
+# một release chính thức đã xác minh tên file và SHA-256 (không xóa bản đang cài).
+metadata=""
+if curl --fail --location --silent --show-error --connect-timeout 20 "$API" -o "$tmp"; then
+  metadata="$(python3 - "$tmp" "$VARIANT" <<'PY'
+  import json,sys
+  d=json.load(open(sys.argv[1],encoding='utf-8'))
+  suffix='-Full-x86_64.AppImage' if sys.argv[2]=='full' else '-x86_64.AppImage'
+  a=[x for x in d.get('assets',[]) if x.get('name','').endswith(suffix) and '+ZaDark-' in x['name'] and (sys.argv[2]=='full' or '-Full-' not in x['name'])]
+  if not a: raise SystemExit('Không tìm thấy AppImage ZaDark x86_64 đúng biến thể')
+  if len(a) != 1: raise SystemExit('Có nhiều AppImage ZaDark cùng biến thể; cần chọn thủ công')
+  x=a[0]
+  print(d.get('tag_name','unknown')); print(x['name']); print(x['browser_download_url']); print(x.get('digest') or '-')
+  PY
+  )" || metadata=""
+else
+  info "Không truy cập được GitHub Releases API; thử bản dự phòng đã xác minh."
+fi
+if [[ -n "$metadata" ]]; then
+  readarray -t META <<< "$metadata"
+  (( ${#META[@]} == 4 )) || die "Metadata release thiếu trường; giữ nguyên bản đang cài"
+  TAG="${META[0]}"; NAME="${META[1]}"; URL="${META[2]}"; DIGEST="${META[3]}"
+else
+  [[ "$REPO" == "VN-Linux-Family/zalo-for-linux" ]] || die "Không có fallback đã xác minh cho ZALO_REPO=$REPO"
+  TAG="26.10.11"
+  if [[ "$VARIANT" == "full" ]]; then
+    NAME="Zalo-26.10.11+ZaDark-26.2.1-e80931a-Full-x86_64.AppImage"
+    URL="https://github.com/VN-Linux-Family/zalo-for-linux/releases/download/26.10.11/Zalo-26.10.11%2BZaDark-26.2.1-e80931a-Full-x86_64.AppImage"
+    DIGEST="sha256:daaee9684daf60bec96eb097bd4fcb623980452d3805ccc949dddaf5da3ea77b"
+  else
+    NAME="Zalo-26.10.11+ZaDark-26.2.1-e80931a-x86_64.AppImage"
+    URL="https://github.com/VN-Linux-Family/zalo-for-linux/releases/download/26.10.11/Zalo-26.10.11%2BZaDark-26.2.1-e80931a-x86_64.AppImage"
+    DIGEST="sha256:7a58408a88a2a430c072e5ed34465b38dd1b3328cc83e97efeb90cfd9964c31a"
+  fi
+  info "Dùng release dự phòng cố định $TAG vì GitHub API không truy cập được."
+fi
 info "Release $TAG — $NAME"
-curl --fail --location --progress-bar "$URL" -o "$APPIMAGE.part"
+if ! curl --fail --location --progress-bar --retry 2 --connect-timeout 20 "$URL" -o "$APPIMAGE.part"; then
+  rm -f "$APPIMAGE.part"
+  die "Không tải được AppImage từ GitHub Releases. Kiểm tra URL, proxy/tường lửa hoặc thử mạng khác; Zalo hiện tại vẫn được giữ."
+fi
 if [[ "$DIGEST" == sha256:* ]]; then
   [[ "${DIGEST#sha256:}" == "$(sha256sum "$APPIMAGE.part" | awk '{print $1}')" ]] || { rm -f "$APPIMAGE.part"; die "Checksum không khớp; giữ nguyên bản đang cài"; }
   info "Checksum SHA-256: OK"
