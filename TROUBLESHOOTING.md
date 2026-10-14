@@ -1,9 +1,15 @@
 # Quy tắc xử lý lỗi
 
+Các lệnh bên dưới giả định đã tải repository vào `$HOME/zalo-linux-chat-kit` theo [hướng dẫn cài đặt](README.md#cài-đặt-trên-ubuntulinux-mint-khuyến-nghị). Không tải và thực thi script bằng `curl | bash` khi Raw GitHub bị HTTP 403.
+
+## Lệnh cài báo HTTP 403
+
+Nếu `curl` báo `The requested URL returned error: 403` khi truy cập `raw.githubusercontent.com`, hãy dùng lệnh `git clone` trong [README](README.md) thay cho `curl | bash`. Nếu `git clone` hay bước tải AppImage còn thất bại, kiểm tra proxy, DNS, tường lửa và quyền truy cập GitHub API/Releases; không xóa database chat.
+
 ## Zalo không mở / báo FUSE
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/huynhoainam-sys/zalo-linux-chat-kit/main/zalo-repair.sh | bash
+bash "$HOME/zalo-linux-chat-kit/zalo-repair.sh"
 ```
 
 Launcher tự bật `APPIMAGE_EXTRACT_AND_RUN=1` khi máy thiếu FUSE. Không xóa `~/.config/ZaloApp` hoặc `~/.local/share/ZaloData`.
@@ -30,7 +36,7 @@ Bộ cài này không sửa mã ZaDark bên trong AppImage và không bảo đ�
 
 ## Ảnh cũ trong tin nhắn không về Linux
 
-Nếu ảnh mới vẫn hiển thị nhưng ảnh cũ chỉ xem được trên điện thoại, đừng xóa cache/database Zalo hoặc cài lại trước khi sao lưu. Chạy `curl -fsSL https://raw.githubusercontent.com/huynhoainam-sys/zalo-linux-chat-kit/main/backup-zalo-linux.sh | bash` để giữ dữ liệu Linux hiện tại. Đồng bộ tin nhắn không bảo đảm khôi phục mọi tệp ảnh cũ.
+Nếu ảnh mới vẫn hiển thị nhưng ảnh cũ chỉ xem được trên điện thoại, đừng xóa cache/database Zalo hoặc cài lại trước khi sao lưu. Chạy `bash "$HOME/zalo-linux-chat-kit/backup-zalo-linux.sh"` để giữ dữ liệu Linux hiện tại. Đồng bộ tin nhắn không bảo đảm khôi phục mọi tệp ảnh cũ.
 
 1. Chọn một ảnh cũ cụ thể. So sánh cùng tin nhắn trên **ứng dụng Zalo PC Windows/Mac mới đăng nhập** và bản Linux; Zalo Web có thể hiển thị lịch sử ngắn hơn nên không dùng làm mốc. Không xóa dữ liệu PC hoặc điện thoại đang xem được ảnh để thử lại: ảnh có thể chỉ còn trong cache của thiết bị cũ.
 2. Nếu PC mới đăng nhập tải được ảnh nhưng Linux không tải được, ghi lại thời điểm tin nhắn, tên AppImage và trạng thái ảnh khi mở (trắng, xoay mãi hay báo lỗi). Có thể mở DevTools bằng `Ctrl+Shift+I` để kiểm tra Console/Network. Ẩn cookie, token, URL ảnh riêng tư và nội dung cuộc trò chuyện trước khi chia sẻ log. Đây là lỗi cần khoanh vùng trong AppImage upstream; bản Full hay `xclip` không tự sửa phần tải ảnh cũ.
