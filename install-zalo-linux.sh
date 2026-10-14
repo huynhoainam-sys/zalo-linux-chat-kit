@@ -44,16 +44,16 @@ tmp="$(mktemp)"; trap 'rm -f "$tmp"' EXIT
 metadata=""
 if curl --fail --location --silent --show-error --connect-timeout 20 "$API" -o "$tmp"; then
   metadata="$(python3 - "$tmp" "$VARIANT" <<'PY'
-  import json,sys
-  d=json.load(open(sys.argv[1],encoding='utf-8'))
-  suffix='-Full-x86_64.AppImage' if sys.argv[2]=='full' else '-x86_64.AppImage'
-  a=[x for x in d.get('assets',[]) if x.get('name','').endswith(suffix) and '+ZaDark-' in x['name'] and (sys.argv[2]=='full' or '-Full-' not in x['name'])]
-  if not a: raise SystemExit('Không tìm thấy AppImage ZaDark x86_64 đúng biến thể')
-  if len(a) != 1: raise SystemExit('Có nhiều AppImage ZaDark cùng biến thể; cần chọn thủ công')
-  x=a[0]
-  print(d.get('tag_name','unknown')); print(x['name']); print(x['browser_download_url']); print(x.get('digest') or '-')
-  PY
-  )" || metadata=""
+import json,sys
+d=json.load(open(sys.argv[1],encoding='utf-8'))
+suffix='-Full-x86_64.AppImage' if sys.argv[2]=='full' else '-x86_64.AppImage'
+a=[x for x in d.get('assets',[]) if x.get('name','').endswith(suffix) and '+ZaDark-' in x['name'] and (sys.argv[2]=='full' or '-Full-' not in x['name'])]
+if not a: raise SystemExit('Không tìm thấy AppImage ZaDark x86_64 đúng biến thể')
+if len(a) != 1: raise SystemExit('Có nhiều AppImage ZaDark cùng biến thể; cần chọn thủ công')
+x=a[0]
+print(d.get('tag_name','unknown')); print(x['name']); print(x['browser_download_url']); print(x.get('digest') or '-')
+PY
+)" || metadata=""
 else
   info "Không truy cập được GitHub Releases API; thử bản dự phòng đã xác minh."
 fi
