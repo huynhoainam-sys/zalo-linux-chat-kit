@@ -4,7 +4,23 @@ Các lệnh bên dưới giả định đã tải repository vào `$HOME/zalo-li
 
 ## Lệnh cài báo HTTP 403
 
-Nếu `curl` báo `The requested URL returned error: 403` khi truy cập `raw.githubusercontent.com`, hãy dùng lệnh `git clone` trong [README](README.md) thay cho `curl | bash`. Nếu `git clone` hay bước tải AppImage còn thất bại, kiểm tra proxy, DNS, tường lửa và quyền truy cập GitHub API/Releases; không xóa database chat.
+Nếu `curl` báo HTTP 403 khi truy cập `raw.githubusercontent.com`, dùng `git clone` trong [README](README.md) thay vì `curl | bash`.
+
+Nếu `git clone` **thành công** nhưng chạy installer tiếp tục gặp `curl: (22) ... 403`, đó thường là bước gọi `https://api.github.com/repos/VN-Linux-Family/zalo-for-linux/releases/latest`. Cập nhật bản vá rồi chạy lại:
+
+```bash
+git -C "$HOME/zalo-linux-chat-kit" pull --ff-only
+bash "$HOME/zalo-linux-chat-kit/install-zalo-linux.sh"
+```
+
+Bộ cài có fallback tới bản `26.10.11` Chat/Full từ GitHub Releases, kiểm tra SHA-256 trước khi thay AppImage. Nếu GitHub Releases cũng trả 403, không có lệnh cài nào vượt được giới hạn mạng này: thử kết nối khác hoặc yêu cầu quản trị mạng kiểm tra tường lửa/proxy. Chạy:
+
+```bash
+curl -sS -L -o /dev/null -w 'GitHub API: HTTP %{http_code}\\n' 'https://api.github.com/repos/VN-Linux-Family/zalo-for-linux/releases/latest'
+curl -sS -L -o /dev/null -w 'GitHub release: HTTP %{http_code}\\n' 'https://github.com/VN-Linux-Family/zalo-for-linux/releases/tag/26.10.11'
+```
+
+Không xóa database chat hoặc tắt cơ chế bảo vệ hệ thống để xử lý HTTP 403.
 
 ## Zalo không mở / báo FUSE
 
