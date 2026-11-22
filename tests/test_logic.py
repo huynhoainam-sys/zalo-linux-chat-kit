@@ -1,4 +1,5 @@
 import json
+import hashlib
 import os
 from pathlib import Path
 import re
@@ -99,6 +100,59 @@ class LauncherTests(unittest.TestCase):
                                     capture_output=True, text=True)
             self.assertNotEqual(result.returncode, 0)
             self.assertIn('AppImage', result.stderr)
+
+
+class MirrorDownloadTests(unittest.TestCase):
+    def test_retries_only_verified_mirror_after_github_403(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            payload = root / 'official.bin'
+            payload.write_bytes(b'\x7fELF verified upstream appimage fixture')
+            sha = hashlib.sha256(payload.read_bytes()).hexdigest()
+            fakebin = root / 'bin'
+            fakebin.mkdir()
+            curl = fakebin / 'curl'
+            curl.write_text('''#!/usr/bin/env bash
+set -e
+url=''; target=''
+while (($#)); do
+  case "$1" in
+    -o) target="$2"; shift 2 ;;
+    https://*) url="$1"; shift ;;
+    *) shift ;;
+  esac
+done
+[[ "$url" == https://gh-proxy.com/* ]] || exit 22
+cp "$MOCK_PAYLOAD" "$target"
+''')
+            curl.chmod(0o755)
+            target = root / 'download.AppImage'
+            env = dict(os.environ, PATH=str(fakebin) + os.pathsep + os.environ['PATH'],
+                       MOCK_PAYLOAD=str(payload))
+            command = 'source "$1"; download_zalo_appimage "$2" "$3" "$4"'
+            run = subprocess.run(['bash', '-c', command, 'test', str(ROOT / 'zalo-download.sh'),
+                                  'https://github.com/example/release.AppImage', str(target),
+                                  'sha256:' + sha], env=env, capture_output=True, text=True)
+            self.assertEqual(run.returncode, 0, run.stderr)
+            self.assertEqual(target.read_bytes(), payload.read_bytes())
+            self.assertIn('SHA-256: OK', run.stdout)
+
+            wrong = subprocess.run(['bash', '-c', command, 'test', str(ROOT / 'zalo-download.sh'),
+                                    'https://github.com/example/release.AppImage', str(target),
+                                    'sha256:' + '0' * 64], env=env, capture_output=True, text=True)
+            self.assertNotEqual(wrong.returncode, 0)
+            self.assertFalse(target.exists())
+
+    def test_unknown_digest_disables_third_party_mirrors(self):
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder) / 'download.AppImage'
+            env = dict(os.environ, ZALO_MIRROR_URL='https://example.invalid/file.AppImage')
+            script = 'source "$1"; download_zalo_appimage "$2" "$3" "$4"'
+            result = subprocess.run(['bash', '-c', script, 'test', str(ROOT / 'zalo-download.sh'),
+                                     'https://127.0.0.1:1/no-file', str(target), '-'],
+                                    env=env, capture_output=True, text=True, timeout=12)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('không dùng nguồn mirror', result.stderr)
 
 
 if __name__ == '__main__':

@@ -4,6 +4,8 @@ set -Eeuo pipefail
 REPO="${ZALO_REPO:-VN-Linux-Family/zalo-for-linux}"
 VARIANT="${ZALO_VARIANT:-chat}"
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
+source "$ROOT_DIR/zalo-download.sh"
 APP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/zalo-linux"
 BIN_DIR="${XDG_BIN_HOME:-$HOME/.local/bin}"
 DESKTOP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
@@ -24,7 +26,11 @@ else
   command -v wl-paste >/dev/null || need+=(wl-clipboard)
   command -v update-desktop-database >/dev/null || need+=(desktop-file-utils)
   command -v notify-send >/dev/null || need+=(libnotify-bin)
-  command -v curl >/dev/null || need+=(ca-certificates)
+  [[ "$(dpkg-query -W -f='${Status}' ca-certificates 2>/dev/null || true)" == 'install ok installed' ]] || need+=(ca-certificates)
+  # Current upstream AppImages provide native calling on Linux (no Wine/i386).
+  for pkg in libopus0 pulseaudio-utils; do
+    [[ "$(dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null || true)" == 'install ok installed' ]] || need+=("$pkg")
+  done
   if ! ldconfig -p 2>/dev/null | grep -F 'libfuse.so.2' >/dev/null; then
     if apt-cache show libfuse2t64 >/dev/null 2>&1; then need+=(libfuse2t64); else need+=(libfuse2); fi
   fi
@@ -89,15 +95,16 @@ else
     die "GitHub API hoạt động nhưng release mới nhất không có bản $VARIANT phù hợp. Dùng ZALO_VARIANT=chat để cài bản mới; không tự hạ xuống release cũ."
   fi
   [[ "$REPO" == "VN-Linux-Family/zalo-for-linux" ]] || die "Không có fallback đã xác minh cho ZALO_REPO=$REPO"
-  TAG="26.10.11"
+  TAG="26.11.10"
   if [[ "$VARIANT" == "full" ]]; then
+    TAG="26.10.11"
     NAME="Zalo-26.10.11+ZaDark-26.2.1-e80931a-Full-x86_64.AppImage"
     URL="https://github.com/VN-Linux-Family/zalo-for-linux/releases/download/26.10.11/Zalo-26.10.11%2BZaDark-26.2.1-e80931a-Full-x86_64.AppImage"
     DIGEST="sha256:daaee9684daf60bec96eb097bd4fcb623980452d3805ccc949dddaf5da3ea77b"
   else
-    NAME="Zalo-26.10.11+ZaDark-26.2.1-e80931a-x86_64.AppImage"
-    URL="https://github.com/VN-Linux-Family/zalo-for-linux/releases/download/26.10.11/Zalo-26.10.11%2BZaDark-26.2.1-e80931a-x86_64.AppImage"
-    DIGEST="sha256:7a58408a88a2a430c072e5ed34465b38dd1b3328cc83e97efeb90cfd9964c31a"
+    NAME="Zalo-26.11.10+ZaDark-26.3-836500e-x86_64.AppImage"
+    URL="https://github.com/VN-Linux-Family/zalo-for-linux/releases/download/26.11.10/Zalo-26.11.10%2BZaDark-26.3-836500e-x86_64.AppImage"
+    DIGEST="sha256:eb2dfd4119f14fbf9d5990a3078b2769672032a070187d9e0c2ca20578391916"
   fi
   info "Dùng release dự phòng cố định $TAG vì GitHub API không truy cập được."
 fi
@@ -108,21 +115,13 @@ if [[ "$VARIANT" == full ]] && command -v apt-get >/dev/null && command -v sudo 
   sudo apt-get update
   sudo apt-get install -y libgl1 libgl1:i386 libegl1 libegl1:i386 libvulkan1 libvulkan1:i386 mesa-vulkan-drivers mesa-vulkan-drivers:i386
 fi
-if ! curl --fail --location --progress-bar --retry 2 --connect-timeout 20 "$URL" -o "$APPIMAGE.part"; then
+if ! download_zalo_appimage "$URL" "$APPIMAGE.part" "$DIGEST"; then
   rm -f "$APPIMAGE.part"
   if [[ -x "$APPIMAGE" ]]; then
-    info 'GitHub Releases bị chặn; giữ nguyên Zalo đã cài. Không thay proxy/VPN và không xóa dữ liệu.'
+    info 'Các nguồn tải bị chặn hoặc checksum sai; giữ nguyên Zalo đã cài. Không xóa dữ liệu.'
     exit 0
   fi
-  die "Không tải được AppImage từ GitHub Releases. Kiểm tra proxy FPT/allowlist hoặc sử dụng mạng được phép; chưa thay đổi dữ liệu Zalo."
-fi
-if [[ "$DIGEST" == sha256:* ]]; then
-  [[ "${DIGEST#sha256:}" == "$(sha256sum "$APPIMAGE.part" | awk '{print $1}')" ]] || { rm -f "$APPIMAGE.part"; die "Checksum không khớp; giữ nguyên bản đang cài"; }
-  info "Checksum SHA-256: OK"
-else info "Release không cung cấp digest API; bỏ qua checksum"; fi
-if [[ "$(od -An -tx1 -N4 "$APPIMAGE.part" | tr -d '[:space:]')" != 7f454c46 ]]; then
-  rm -f "$APPIMAGE.part"
-  die 'File đã tải không phải ELF AppImage; giữ bản đang cài'
+  die "Không tải được AppImage từ GitHub và mirror có SHA-256. Kiểm tra proxy FPT, hoặc cung cấp ZALO_OFFLINE_APPIMAGE đã xác minh; chưa thay đổi dữ liệu Zalo."
 fi
 backup_before_update
 chmod 0755 "$APPIMAGE.part"

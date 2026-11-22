@@ -29,7 +29,11 @@ bash -n "$HOME/zalo-linux-chat-kit/install-zalo-linux.sh" && bash "$HOME/zalo-li
 "$HOME/.local/bin/zalo-linux"
 ```
 
-**Khi GitHub API báo 403:** installer tự thử bản upstream cố định đã xác minh (`26.10.11`, SHA-256 cho Chat/Full). Đây là fallback, không bảo đảm mới nhất. Nếu GitHub Releases cũng bị chặn, cần kiểm tra proxy/tường lửa hoặc đổi mạng. Script sẽ không thay AppImage đang chạy nếu tải lỗi hoặc checksum sai.
+**Khi GitHub API báo 403:** installer tự thử bản upstream đã xác minh (Chat `26.11.10`; Full legacy `26.10.11`). Đây là fallback, không bảo đảm mới nhất. Nếu GitHub Releases cũng bị chặn, script thử các mirror có kiểm tra SHA-256. Script không thay AppImage đang chạy nếu tải lỗi hoặc checksum sai.
+
+**Tải thay thế khi proxy FPT chặn GitHub Releases:** sau URL GitHub chính thức, script tự thử `gh-proxy.com` rồi `ghproxy.net` (các proxy cộng đồng, không phải nhà phát hành Zalo). Chỉ khi có SHA-256 upstream hợp lệ mới sử dụng mirror; **checksum sai thì hủy bản tải ngay**. Nếu muốn chỉ dùng URL riêng do đơn vị cho phép, đặt `ZALO_MIRROR_URL=https://...` và `ZALO_DISABLE_PUBLIC_MIRRORS=1`. Cũng có thể dùng tệp AppImage tải sẵn bằng `ZALO_OFFLINE_APPIMAGE=/duong/dan/Zalo.AppImage`. Cả hai vẫn phải khớp SHA-256 bản phát hành. Không cần đổi proxy hệ thống hay tắt VPN.
+
+Khi API bị chặn, bản `chat` dự phòng đã được cập nhật lên `26.11.10` với digest upstream; chỉ bản `full` legacy còn dùng `26.10.11`.
 
 Nếu GitHub API truy cập được nhưng release hiện tại không có biến thể `full`, script báo lỗi rõ ràng thay vì tự hạ xuống một phiên bản cũ. Bản `chat` là lựa chọn khuyến nghị; upstream release `26.11.10` có bản Chat x86_64 nhưng không có gói `Full`. Bản Full cũ có thể phải cài thư viện i386 và tốn thêm dung lượng.
 
