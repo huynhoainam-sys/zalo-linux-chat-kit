@@ -5,7 +5,7 @@ pass(){ printf '[ OK ] %s\n' "$*"; }
 fail(){ printf '[WARN] %s\n' "$*"; warn=$((warn+1)); }
 [[ "$(uname -m)" == "x86_64" ]] && pass "Kiến trúc x86_64" || fail "Không phải x86_64"
 pass "$(ldd --version | head -1)"
-if ldconfig -p 2>/dev/null | grep -q 'libfuse.so.2'; then
+if ldconfig -p 2>/dev/null | grep -F 'libfuse.so.2' >/dev/null; then
   pass "FUSE 2"
 else
   echo '[NOTE] Thiếu FUSE 2; launcher sẽ dùng APPIMAGE_EXTRACT_AND_RUN=1'

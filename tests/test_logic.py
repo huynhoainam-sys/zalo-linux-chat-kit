@@ -66,5 +66,40 @@ class InstallerMetadataTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
 
 
+class LauncherTests(unittest.TestCase):
+    def test_gnome_wayland_uses_ibus_and_xwayland_with_safe_overrides(self):
+        with tempfile.TemporaryDirectory() as home:
+            share = Path(home, 'share')
+            app = share / 'zalo-linux' / 'Zalo-x86_64.AppImage'
+            app.parent.mkdir(parents=True)
+            app.write_text('#!/usr/bin/env bash\nprintf "GTK=%s XMOD=%s ARGS=%s\\n" "$GTK_IM_MODULE" "$XMODIFIERS" "$*"\n')
+            app.chmod(0o755)
+            env = dict(os.environ, HOME=home, XDG_DATA_HOME=str(share),
+                       XDG_CURRENT_DESKTOP='ubuntu:GNOME', XDG_SESSION_TYPE='wayland',
+                       DISPLAY=':0')
+            launch = str(ROOT / 'zalo-launcher.sh')
+            result = subprocess.run(['bash', launch, '--test'], env=env, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn('GTK=ibus', result.stdout)
+            self.assertIn('XMOD=@im=ibus', result.stdout)
+            self.assertIn('--ozone-platform=x11', result.stdout)
+            self.assertIn('--no-sandbox', result.stdout)
+
+            env['ZALO_OZONE_PLATFORM'] = 'auto'
+            env['ZALO_SANDBOX'] = '1'
+            result = subprocess.run(['bash', launch], env=env, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertNotIn('--ozone-platform=', result.stdout)
+            self.assertNotIn('--no-sandbox', result.stdout)
+
+    def test_launcher_fails_when_appimage_is_missing(self):
+        with tempfile.TemporaryDirectory() as home:
+            env = dict(os.environ, HOME=home, XDG_DATA_HOME=str(Path(home, 'share')))
+            result = subprocess.run(['bash', str(ROOT / 'zalo-launcher.sh')], env=env,
+                                    capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('AppImage', result.stderr)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -3,6 +3,7 @@ set -Eeuo pipefail
 
 REPO="${ZALO_REPO:-VN-Linux-Family/zalo-for-linux}"
 VARIANT="${ZALO_VARIANT:-chat}"
+ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 APP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/zalo-linux"
 BIN_DIR="${XDG_BIN_HOME:-$HOME/.local/bin}"
 DESKTOP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
@@ -18,17 +19,13 @@ if ! command -v apt-get >/dev/null || ! command -v sudo >/dev/null; then
 else
   need=()
   command -v curl >/dev/null || need+=(curl)
-  if [[ "$VARIANT" == "full" && -f /usr/bin/dpkg ]]; then
-    sudo dpkg --add-architecture i386 >/dev/null 2>&1 || true
-    need+=(libgl1 libgl1:i386 libegl1 libegl1:i386 libvulkan1 libvulkan1:i386 mesa-vulkan-drivers mesa-vulkan-drivers:i386)
-  fi
   command -v python3 >/dev/null || need+=(python3)
   command -v xclip >/dev/null || need+=(xclip)
   command -v wl-paste >/dev/null || need+=(wl-clipboard)
   command -v update-desktop-database >/dev/null || need+=(desktop-file-utils)
   command -v notify-send >/dev/null || need+=(libnotify-bin)
   command -v curl >/dev/null || need+=(ca-certificates)
-  if ! ldconfig -p 2>/dev/null | grep -q 'libfuse.so.2'; then
+  if ! ldconfig -p 2>/dev/null | grep -F 'libfuse.so.2' >/dev/null; then
     if apt-cache show libfuse2t64 >/dev/null 2>&1; then need+=(libfuse2t64); else need+=(libfuse2); fi
   fi
   if (( ${#need[@]} )); then
@@ -39,16 +36,42 @@ else
 fi
 mkdir -p "$APP_DIR" "$BIN_DIR" "$DESKTOP_DIR"
 tmp="$(mktemp)"; trap 'rm -f "$tmp"' EXIT
+
+# Keep chat data before replacing a working binary, but avoid exhausting a
+# nearly-full disk. ZALO_BACKUP=off disables this automatic data snapshot.
+backup_before_update() {
+  [[ -x "$APPIMAGE" ]] || return 0
+  [[ "${ZALO_BACKUP:-auto}" != off ]] || return 0
+  local required=0 free=0 path kb
+  for path in "${XDG_CONFIG_HOME:-$HOME/.config}"/{ZaloData,ZaloApp,Zalo} "${XDG_DATA_HOME:-$HOME/.local/share}"/{ZaloData,Zalo}; do
+    if [[ -d "$path" ]]; then
+      kb="$(du -sk -- "$path" | awk '{print $1}')"
+      required=$((required + kb))
+    fi
+  done
+  (( required > 0 )) || return 0
+  free="$(df -Pk "$APP_DIR" | awk 'NR==2 {print $4}')"
+  if (( free < required * 2 + 262144 )); then
+    info "Dung lượng trống không đủ để backup dữ liệu Zalo an toàn (${required} KiB); giữ bản AppImage trước để rollback."
+    if [[ "${ZALO_BACKUP:-auto}" == always ]]; then die 'ZALO_BACKUP=always yêu cầu đủ dung lượng để backup'; fi
+    return 0
+  fi
+  if ! bash "$ROOT_DIR/backup-zalo-linux.sh"; then
+    die 'Sao lưu Zalo thất bại; chưa thay AppImage hiện tại'
+  fi
+}
 # Thu thập metadata tự động. Nếu API bị HTTP 403 hoặc JSON lỗi, fallback sang
 # một release chính thức đã xác minh tên file và SHA-256 (không xóa bản đang cài).
 metadata=""
+release_available=0
 if curl --fail --location --silent --show-error --connect-timeout 20 "$API" -o "$tmp"; then
+  release_available=1
   metadata="$(python3 - "$tmp" "$VARIANT" <<'PY'
 import json,sys
 d=json.load(open(sys.argv[1],encoding='utf-8'))
 suffix='-Full-x86_64.AppImage' if sys.argv[2]=='full' else '-x86_64.AppImage'
 a=[x for x in d.get('assets',[]) if x.get('name','').endswith(suffix) and '+ZaDark-' in x['name'] and (sys.argv[2]=='full' or '-Full-' not in x['name'])]
-if not a: raise SystemExit('Không tìm thấy AppImage ZaDark x86_64 đúng biến thể')
+if not a: raise SystemExit('Không tìm thấy AppImage ZaDark x86_64 đúng biến thể trong release mới nhất')
 if len(a) != 1: raise SystemExit('Có nhiều AppImage ZaDark cùng biến thể; cần chọn thủ công')
 x=a[0]
 print(d.get('tag_name','unknown')); print(x['name']); print(x['browser_download_url']); print(x.get('digest') or '-')
@@ -62,6 +85,9 @@ if [[ -n "$metadata" ]]; then
   (( ${#META[@]} == 4 )) || die "Metadata release thiếu trường; giữ nguyên bản đang cài"
   TAG="${META[0]}"; NAME="${META[1]}"; URL="${META[2]}"; DIGEST="${META[3]}"
 else
+  if (( release_available )); then
+    die "GitHub API hoạt động nhưng release mới nhất không có bản $VARIANT phù hợp. Dùng ZALO_VARIANT=chat để cài bản mới; không tự hạ xuống release cũ."
+  fi
   [[ "$REPO" == "VN-Linux-Family/zalo-for-linux" ]] || die "Không có fallback đã xác minh cho ZALO_REPO=$REPO"
   TAG="26.10.11"
   if [[ "$VARIANT" == "full" ]]; then
@@ -76,29 +102,36 @@ else
   info "Dùng release dự phòng cố định $TAG vì GitHub API không truy cập được."
 fi
 info "Release $TAG — $NAME"
+if [[ "$VARIANT" == full ]] && command -v apt-get >/dev/null && command -v sudo >/dev/null; then
+  info 'Bản full cũ yêu cầu thư viện 32-bit; chỉ cài khi người dùng chọn full.'
+  sudo dpkg --add-architecture i386
+  sudo apt-get update
+  sudo apt-get install -y libgl1 libgl1:i386 libegl1 libegl1:i386 libvulkan1 libvulkan1:i386 mesa-vulkan-drivers mesa-vulkan-drivers:i386
+fi
 if ! curl --fail --location --progress-bar --retry 2 --connect-timeout 20 "$URL" -o "$APPIMAGE.part"; then
   rm -f "$APPIMAGE.part"
-  die "Không tải được AppImage từ GitHub Releases. Kiểm tra URL, proxy/tường lửa hoặc thử mạng khác; Zalo hiện tại vẫn được giữ."
+  if [[ -x "$APPIMAGE" ]]; then
+    info 'GitHub Releases bị chặn; giữ nguyên Zalo đã cài. Không thay proxy/VPN và không xóa dữ liệu.'
+    exit 0
+  fi
+  die "Không tải được AppImage từ GitHub Releases. Kiểm tra proxy FPT/allowlist hoặc sử dụng mạng được phép; chưa thay đổi dữ liệu Zalo."
 fi
 if [[ "$DIGEST" == sha256:* ]]; then
   [[ "${DIGEST#sha256:}" == "$(sha256sum "$APPIMAGE.part" | awk '{print $1}')" ]] || { rm -f "$APPIMAGE.part"; die "Checksum không khớp; giữ nguyên bản đang cài"; }
   info "Checksum SHA-256: OK"
 else info "Release không cung cấp digest API; bỏ qua checksum"; fi
+if [[ "$(od -An -tx1 -N4 "$APPIMAGE.part" | tr -d '[:space:]')" != 7f454c46 ]]; then
+  rm -f "$APPIMAGE.part"
+  die 'File đã tải không phải ELF AppImage; giữ bản đang cài'
+fi
+backup_before_update
 chmod 0755 "$APPIMAGE.part"
 if [[ -f "$APPIMAGE" ]]; then
   ln -f -- "$APPIMAGE" "$APPIMAGE.previous.tmp"
   mv -f -- "$APPIMAGE.previous.tmp" "$APPIMAGE.previous"
 fi
 mv -f -- "$APPIMAGE.part" "$APPIMAGE"
-cat > "$BIN_DIR/zalo-linux" <<'EOF'
-#!/usr/bin/env bash
-APPIMAGE="${XDG_DATA_HOME:-$HOME/.local/share}/zalo-linux/Zalo-x86_64.AppImage"
-if ! ldconfig -p 2>/dev/null | grep -q 'libfuse.so.2'; then export APPIMAGE_EXTRACT_AND_RUN=1; fi
-# AppImage mount is user-owned, so Electron's setuid helper cannot start on affected Ubuntu systems.
-# ZALO_SANDBOX=1 restores the upstream launch mode when the host supports it.
-if [[ "${ZALO_SANDBOX:-0}" == 1 ]]; then exec "$APPIMAGE" "$@"; fi
-exec "$APPIMAGE" --no-sandbox "$@"
-EOF
+install -m 0755 "$ROOT_DIR/zalo-launcher.sh" "$BIN_DIR/zalo-linux"
 chmod 0755 "$BIN_DIR/zalo-linux"
 ICON_PATH="$APP_DIR/zalo.png"
 icon_tmp="$(mktemp -d)"
