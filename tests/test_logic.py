@@ -124,6 +124,27 @@ class InstallerMetadataTests(unittest.TestCase):
         result = self.select(['Zalo-26.9.10-Original-x86_64.AppImage'], 'chat')
         self.assertNotEqual(result.returncode, 0)
 
+    def test_terminal_branding_ansi_progress_and_no_color(self):
+        with tempfile.TemporaryDirectory() as folder:
+            fakebin = Path(folder, 'bin')
+            fakebin.mkdir()
+            uname = fakebin / 'uname'
+            uname.write_text('#!/bin/sh\nprintf aarch64\n')
+            uname.chmod(0o755)
+            env = dict(os.environ, PATH=str(fakebin) + os.pathsep + os.environ['PATH'],
+                       FORCE_COLOR='1', TERM='xterm')
+            env.pop('NO_COLOR', None)
+            script = str(ROOT / 'install-zalo-linux.sh')
+            colorful = subprocess.run(['bash', script], env=env, capture_output=True, text=True)
+            self.assertNotEqual(colorful.returncode, 0, 'Fixture architecture must stop before install')
+            self.assertIn('NAMHH', colorful.stdout)
+            self.assertIn('huynhoainam@gmail.com', colorful.stdout)
+            self.assertIn('1/6', colorful.stdout)
+            self.assertIn('\x1b[', colorful.stdout)
+            env['NO_COLOR'] = '1'
+            plain = subprocess.run(['bash', script], env=env, capture_output=True, text=True)
+            self.assertNotIn('\x1b[', plain.stdout + plain.stderr)
+
 
 class LauncherTests(unittest.TestCase):
     def test_gnome_wayland_uses_ibus_and_xwayland_with_safe_overrides(self):
