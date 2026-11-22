@@ -2,9 +2,9 @@
 
 Cài Zalo cộng đồng trên Ubuntu/Linux Mint, ưu tiên tin nhắn, lịch sử chat, hình ảnh và sao lưu local.
 
-**Terminal NAMHH:** bộ cài hiển thị nhận diện **CREATED BY NAMHH — DESIGN: huynhoainam@gmail.com**, màu ANSI, tiến trình 6 bước và thanh tải dữ liệu thật của `curl` khi chạy trực tiếp trong Terminal. `NO_COLOR=1` tắt màu; `ZALO_DOWNLOAD_PROGRESS=off` tắt thanh tải. Khi chạy CI hoặc chuyển đầu ra vào file, bỏ màu/thanh để không làm nhiễu log. Thanh phần trăm của bộ cài là **tiến độ theo bước**, không phải phần trăm byte tải AppImage.
+**Terminal NAMHH:** nhận diện **NAMHH — Design: huynhoainam@gmail.com**, màu slate nhẹ và tiến độ sáu bước `[01/06]` gọn gàng; khi tải AppImage, `curl` vẫn báo lượng dữ liệu thực. `NO_COLOR=1` tắt màu; `ZALO_DOWNLOAD_PROGRESS=off` tắt thanh tải. Khi chạy CI hoặc chuyển đầu ra vào file, bỏ màu/thanh để log sạch. `(100%)` ở bước cuối là **tiến độ theo bước**, không phải số byte AppImage.
 
-> Trên Ubuntu 24.04 GNOME/Wayland, nên cài đồng bộ tiếng Việt + Flameshot + Zalo qua [Universal Linux Office Kit](https://github.com/huynhoainam-sys/universal-linux-office-kit) với `--repair-desktop`. Bộ cài này vẫn có thể chạy độc lập.
+> Trên Ubuntu 24.04 GNOME/Wayland, nên cài đồng bộ **WPS Office (ưu tiên) + bộ Office thứ hai + tiếng Việt + Flameshot + Zalo** qua [Universal Linux Office Kit](https://github.com/huynhoainam-sys/universal-linux-office-kit) với `--repair-desktop`. Không cần clone Zalo Kit riêng. Bộ cài Zalo này vẫn có thể chạy độc lập.
 
 ## Cài đặt trên Ubuntu/Linux Mint (khuyến nghị)
 

@@ -139,7 +139,7 @@ class InstallerMetadataTests(unittest.TestCase):
             self.assertNotEqual(colorful.returncode, 0, 'Fixture architecture must stop before install')
             self.assertIn('NAMHH', colorful.stdout)
             self.assertIn('huynhoainam@gmail.com', colorful.stdout)
-            self.assertIn('1/6', colorful.stdout)
+            self.assertIn('[01/06]', colorful.stdout)
             self.assertIn('\x1b[', colorful.stdout)
             env['NO_COLOR'] = '1'
             plain = subprocess.run(['bash', script], env=env, capture_output=True, text=True)
