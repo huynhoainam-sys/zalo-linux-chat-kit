@@ -30,6 +30,19 @@ bash "$HOME/zalo-linux-chat-kit/zalo-repair.sh"
 
 Launcher tự bật `APPIMAGE_EXTRACT_AND_RUN=1` khi máy thiếu FUSE. Không xóa `~/.config/ZaloApp` hoặc `~/.local/share/ZaloData`.
 
+## Quét QR xong nhưng cứ “Đang đăng nhập…”
+
+Vấn đề trùng hiện tượng tại [issue #13 của dự án Zalo Linux gốc](https://github.com/VN-Linux-Family/zalo-for-linux/issues/13). Người bảo trì từng xác định một số bản cũ thiếu Linux SQLite binding; lỗi được đánh dấu sửa từ `26.3.20`. Tuy vậy, màn hình xoay cũng có thể do phiên đăng nhập hỏng hoặc kết nối mạng: riêng ảnh chụp màn hình không đủ để kết luận nguyên nhân trên máy của bạn.
+
+1. Trên điện thoại, kiểm tra đã **xác nhận đăng nhập** sau khi quét QR. Đóng Zalo trên Ubuntu và cập nhật repo cùng AppImage lên bản mới.
+2. Nếu vẫn xoay, dùng `bash "$HOME/zalo-linux-chat-kit/zalo-login-recover.sh" --dry-run` để xem trước, sau đó đóng hết Zalo và chạy `bash "$HOME/zalo-linux-chat-kit/zalo-login-recover.sh"`. Script di chuyển nguyên thư mục `ZaloData` vào `~/.config/ZaloData.login-backup-...`, giữ lại dữ liệu và không ghi đè bản backup cũ. Khởi động Zalo rồi quét QR lại.
+3. Nếu vẫn lỗi, thử chế độ hiển thị khác qua `ZALO_OZONE_PLATFORM=auto "$HOME/.local/bin/zalo-linux"` trên GNOME Wayland. Xem lỗi trong DevTools `Ctrl+Shift+I` → Console. Lỗi `node_sqlite3.node`, `GLIBC`, `ERR_PROXY_CONNECTION_FAILED` hoặc `net::ERR_*` giúp phân biệt thư viện với mạng; đừng kết luận tất cả đều do proxy FPT.
+4. Trên mạng công ty có proxy, thử kết nối hotspot điện thoại **nếu được phép theo chính sách IT**. Proxy cho GitHub tải AppImage và máy chủ xác thực Zalo là hai đường mạng khác nhau. Không tắt bảo mật hoặc vượt cơ chế chặn của doanh nghiệp.
+
+Muốn quay lại dữ liệu cũ: đóng Zalo, **di chuyển `~/.config/ZaloData` mới sang vị trí backup riêng** trước; sau đó dùng lệnh `--restore DUONG_DAN_BACKUP` mà script đã in. Script từ chối ghi đè dữ liệu mới.
+
+**Chú ý:** Login sạch có thể yêu cầu đồng bộ lại, và dữ liệu chỉ có tại máy Linux cũ có thể không được tải lại từ máy chủ. Hãy kiểm tra backup trước khi chọn phục hồi. Khi gửi log, che toàn bộ QR, token, cookie, số điện thoại, nội dung chat và URL đăng nhập.
+
 ## Bấm icon nhưng Zalo không mở (SUID sandbox)
 
 Chạy `~/.local/bin/zalo-linux` trong Terminal. Nếu thấy `The SUID sandbox helper binary was found, but is not configured correctly`, cài lại hoặc chạy repair để cập nhật launcher. Launcher dùng `--no-sandbox` mặc định cho cả bản Chat và Full. Đặt `ZALO_SANDBOX=1` để thử chế độ sandbox trên máy có hỗ trợ. Khi phải tắt sandbox, Electron giảm bảo vệ của ứng dụng Zalo; chỉ chạy AppImage từ nguồn tin cậy. Repair cũng khôi phục icon và desktop entry. Nếu trước đây tạo icon thủ công `Zalo Linux (AppImage)`, có thể bỏ ghim và xóa lối tắt cũ sau khi xác nhận icon `Zalo Linux` mới mở được.

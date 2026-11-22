@@ -32,6 +32,64 @@ class BackupTests(unittest.TestCase):
                     self.assertTrue(any(name.endswith('/.config/ZaloData/cal/main.meta') for name in tar.getnames()))
 
 
+class LoginRecoveryTests(unittest.TestCase):
+    def test_quarantines_old_database_without_deleting_and_can_restore(self):
+        with tempfile.TemporaryDirectory() as home:
+            config = Path(home, '.config folder')
+            original = config / 'ZaloData' / 'cal' / 'main.meta'
+            original.parent.mkdir(parents=True)
+            original.write_bytes(b'precious chat history')
+            env = dict(os.environ, HOME=home, XDG_CONFIG_HOME=str(config))
+            script = str(ROOT / 'zalo-login-recover.sh')
+
+            preview = subprocess.run(['bash', script, '--dry-run'], env=env,
+                                     capture_output=True, text=True)
+            self.assertEqual(preview.returncode, 0, preview.stderr)
+            self.assertTrue(original.exists())
+
+            moved = subprocess.run(['bash', script], env=env,
+                                   capture_output=True, text=True)
+            self.assertEqual(moved.returncode, 0, moved.stderr)
+            self.assertFalse(original.exists())
+            backups = list(config.glob('ZaloData.login-backup-*'))
+            self.assertEqual(len(backups), 1)
+            self.assertEqual((backups[0] / 'ZaloData/cal/main.meta').read_bytes(),
+                             b'precious chat history')
+            self.assertEqual(backups[0].stat().st_mode & 0o777, 0o700)
+
+            fresh = config / 'ZaloData' / 'fresh.db'
+            fresh.parent.mkdir()
+            fresh.write_text('new login data')
+            refused = subprocess.run(['bash', script, '--restore', str(backups[0])],
+                                     env=env, capture_output=True, text=True)
+            self.assertNotEqual(refused.returncode, 0)
+            self.assertTrue(fresh.exists(), 'Must not overwrite new Zalo data')
+            fresh.unlink()
+            fresh.parent.rmdir()
+            restored = subprocess.run(['bash', script, '--restore', str(backups[0])],
+                                      env=env, capture_output=True, text=True)
+            self.assertEqual(restored.returncode, 0, restored.stderr)
+            self.assertEqual(original.read_bytes(), b'precious chat history')
+
+    def test_refuses_when_application_is_running(self):
+        with tempfile.TemporaryDirectory() as home:
+            config = Path(home, '.config')
+            data = config / 'ZaloData'
+            data.mkdir(parents=True)
+            fakebin = Path(home, 'bin')
+            fakebin.mkdir()
+            fake_pgrep = fakebin / 'pgrep'
+            fake_pgrep.write_text('#!/bin/sh\nexit 0\n')
+            fake_pgrep.chmod(0o755)
+            env = dict(os.environ, HOME=home, XDG_CONFIG_HOME=str(config),
+                       PATH=str(fakebin) + os.pathsep + os.environ['PATH'])
+            result = subprocess.run(['bash', str(ROOT / 'zalo-login-recover.sh')],
+                                    env=env, capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertTrue(data.exists())
+            self.assertIn('Đóng', result.stderr)
+
+
 class InstallerMetadataTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

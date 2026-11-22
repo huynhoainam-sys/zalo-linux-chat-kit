@@ -68,6 +68,18 @@ Installer trích xuất icon từ AppImage, tạo launcher `Zalo Linux` và ch�
 bash "$HOME/zalo-linux-chat-kit/zalo-repair.sh"
 ```
 
+**Quét QR xong nhưng Zalo xoay mãi ở “Đang đăng nhập…”:** đây là lỗi từng được ghi nhận tại [upstream issue #13](https://github.com/VN-Linux-Family/zalo-for-linux/issues/13), liên quan thư viện SQLite hoặc dữ liệu đăng nhập cũ. Trước tiên cập nhật AppImage từ bản đã sửa, rồi đóng hoàn toàn Zalo. Nếu vẫn xoay, chạy lệnh sau để **chuyển** `~/.config/ZaloData` sang một thư mục backup riêng, không xóa dữ liệu:
+
+```bash
+git -C "$HOME/zalo-linux-chat-kit" pull --ff-only
+bash "$HOME/zalo-linux-chat-kit/install-zalo-linux.sh"
+# Chỉ sau khi đóng hết cửa sổ Zalo:
+bash "$HOME/zalo-linux-chat-kit/zalo-login-recover.sh"
+"$HOME/.local/bin/zalo-linux"
+```
+
+Script in vị trí backup và lệnh `--restore` để khôi phục khi cần. Việc dùng cấu hình mới có thể khiến Zalo phải đồng bộ lại tin nhắn; **không có gì bảo đảm lịch sử chat chưa đồng bộ sẽ tự xuất hiện lại**. Không gửi ảnh QR, database hoặc token cho người khác. Xem thêm [hướng dẫn xử lý QR và log](TROUBLESHOOTING.md#quét-qr-xong-nhưng-cứ-đang-đăng-nhập).
+
 **Gỡ ứng dụng (không xóa database chat):**
 
 ```bash
